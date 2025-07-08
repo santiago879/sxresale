@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Panel de Control - SX Resale</title>
+  <style>
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+    }
+    .login, .panel {
+      max-width: 700px;
+      margin: auto;
+    }
+    input, textarea, button {
+      display: block;
+      width: 100%;
+      padding: 0.75rem;
+      margin-top: 0.5rem;
+      background: #111;
+      border: 1px solid #fff;
+      color: #fff;
+    }
+    .producto {
+      margin: 1rem 0;
+      padding: 1rem;
+      background-color: #111;
+      border: 1px solid #555;
+      border-radius: 10px;
+    }
+    .row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .row input {
+      flex: 1;
+    }
+    label {
+      margin-top: 0.5rem;
+      display: block;
+    }
+    .delete-btn {
+      background: red;
+      color: white;
+      margin-top: 1rem;
+      width: auto;
+      padding: 0.5rem 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="login" id="login">
+    <h2>Acceso al Panel de Control</h2>
+    <input type="password" id="password" placeholder="Contraseña de administrador"/>
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <div class="panel" id="panel" style="display:none;">
+    <h2>Gestión de Productos</h2>
+    <div id="lista-productos"></div>
+
+    <h3>Agregar Nuevo Producto</h3>
+    <div class="producto">
+      <input type="text" id="nuevo-nombre" placeholder="Nombre del producto" />
+      <textarea id="nuevo-desc" placeholder="Descripción"></textarea>
+      <label><input type="checkbox" id="nuevo-disponible" checked /> Disponible</label>
+      <button onclick="agregarProducto()">Agregar Producto</button>
+    </div>
+  </div>
+
+  <script>
+    const PASSWORD = "sx 2025"; // Cambiar si deseas otra clave
+
+    function getProductos() {
+      const data = localStorage.getItem('productos');
+      return data ? JSON.parse(data) : [];
+    }
+
+    function setProductos(arr) {
+      localStorage.setItem('productos', JSON.stringify(arr));
+      renderProductos();
+    }
+
+    function login() {
+      const input = document.getElementById('password').value;
+      if (input === PASSWORD) {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('panel').style.display = 'block';
+        renderProductos();
+      } else {
+        alert('Contraseña incorrecta');
+      }
+    }
+
+    function renderProductos() {
+      const lista = document.getElementById('lista-productos');
+      const productos = getProductos();
+      lista.innerHTML = '';
+      productos.forEach((p, index) => {
+        lista.innerHTML += `
+          <div class="producto">
+            <input type="text" value="${p.nombre}" onchange="editarCampo(${index}, 'nombre', this.value)" />
+            <textarea onchange="editarCampo(${index}, 'descripcion', this.value)">${p.descripcion}</textarea>
+            <label>
+              <input type="checkbox" ${p.disponible ? 'checked' : ''} onchange="editarCampo(${index}, 'disponible', this.checked)" />
+              Disponible
+            </label>
+            <button class="delete-btn" onclick="eliminarProducto(${index})">Eliminar</button>
+          </div>
+        `;
+      });
+    }
+
+    function editarCampo(index, campo, valor) {
+      const productos = getProductos();
+      productos[index][campo] = valor;
+      setProductos(productos);
+    }
+
+    function eliminarProducto(index) {
+      const productos = getProductos();
+      if (confirm('¿Estás seguro de eliminar este producto?')) {
+        productos.splice(index, 1);
+        setProductos(productos);
+      }
+    }
+
+    function agregarProducto() {
+      const nombre = document.getElementById('nuevo-nombre').value.trim();
+      const descripcion = document.getElementById('nuevo-desc').value.trim();
+      const disponible = document.getElementById('nuevo-disponible').checked;
+
+      if (!nombre || !descripcion) {
+        alert('Por favor completa todos los campos.');
+        return;
+      }
+
+      const productos = getProductos();
+      productos.push({ nombre, descripcion, disponible });
+      setProductos(productos);
+
+      document.getElementById('nuevo-nombre').value = '';
+      document.getElementById('nuevo-desc').value = '';
+      document.getElementById('nuevo-disponible').checked = true;
+    }
+  </script>
+</body>
+</html>
